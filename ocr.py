@@ -71,7 +71,7 @@ def makeStructureSection(array, xSec, ySec):
 def pixelAtPos(array, x, y):
 	return array[y][x]
 
-
+"""
 #***This Shouldn't return 0 easily.
 # Returns a value based on how percentage of non-white pixels in 5x5 block
 # Returns a value between 0 and 1
@@ -87,6 +87,29 @@ def evalBlock(array):
 	# Adding .1 t return value
 	# To fix mistake of 0 trumping, obv not a permanent solution.
 	return (sqrt(.04 * nonWhiteCount)) + .1
+"""
+
+#***This Shouldn't return 0 easily.
+# Returns a value based on how percentage of non-white pixels in 5x5 block
+# Returns a value between 0 and 1
+# Uses sqrt(.04*x) for 0 <= x <= 25
+# List[List[Int]] -> Int
+
+STARTING_COUNT = 3.0
+
+def evalBlock(array):
+	nonWhiteCount = STARTING_COUNT
+	for row in array:
+		for pixel in row:
+			if (pixel > 0):
+				nonWhiteCount = nonWhiteCount + ((25.0 - STARTING_COUNT) / 25.0)
+
+	# Adding .1 t return value
+	# To fix mistake of 0 trumping, obv not a permanent solution.
+	return (sqrt(.04 * nonWhiteCount))
+
+
+
 
 # Returns a list of the structure section evaluations
 # List[List[Int]] -> List[Int]
@@ -209,6 +232,37 @@ def rightDownCurveVal(array):
 # (for nth rooting to balance)
 
 charStructDict = {
+	"a": [["rightDown", "horizLine", "vertLine", "vertLine", "", "vertLine", "rightUp" "horizLine", "vertLine"]],
+	"b": [["vertLine", "", "", "vertLine", "horizLine", "leftDown", "vertLine" "horizLine", "leftUp"]],	
+	"c": [["rightDown", "horizLine", "", "vertLine", "", "", "rightUp" "horizLine", ""]],
+	"d": [["", "", "vertLine", "rightDown", "horizLine", "vertLine", "rightUp" "horizLine", "vertLine"]],
+	"e": [["rightDown", "horizLine", "leftDown", "horizLine", "horizLine", "horizLine", "rightDown" "horizLine", ""]],
+	
+	"f": [["", "rightDown", "horizLine", "horizLine", "vertLine", "horizLine", "" "vertLine", ""]],
+	"g": [["rightDown", "horizLine", "vertLine", "vertLine", "", "vertLine", "" "horizLine", "leftUp"]],	
+	"h": [["vertLine", "", "", "vertLine", "horizLine", "leftDown", "vertLine" "", "vertLine"]],
+	#* "i": [["", "", "vertLine", "rightDown", "horizLine", "vertLine", "rightUp" "horizLine", "vertLine"]],
+	"j": [["", "vertLine", "", "", "vertLine", "", "leftUp" "vertLine", ""]],
+
+	"k": [["vertLine", "", "", "vertLine", "leftDiag", "", "vertLine" "rightDiag", ""]],
+	#(*) "l": [["", "vertLine", "", "", "vertLine", "", "" "vertLine", ""]],	
+	"m": [["horizLine", "horizLine", "horizLine" "vertLine", "vertLine", "vertLine", "vertLine" "vertLine", "vertLine"]],
+	"n": [["rightDown", "horizLine", "leftDown", "vertLine", "", "vertLine", "vertLine" "", "vertLine"]],
+	# it's 0, ... "o": [["rightDown", "horizLine", "leftDown", "vertLine", "", "vertLine", "rightUp", "horizLine", "leftUp"]],
+
+	"p": [["vertLine", "horizLine", "leftDown", "vertLine", "horizLine", "leftUp", "vertLine" "", ""]],
+	"q": [["rightDown", "horizLine", "vertLine", "rightUp", "horizLine", "vertLine", "" "", "vertLine"]],	
+	# bad "r": [["vertLine", "", "", "vertLine", "horizLine", "", "vertLine" "", ""]],
+	"s": [["vertLine", "horizLine", "", "rightUp", "rightDiag", "leftDown", "" "horizLine", "vertLine"]],
+	
+	"u": [["vertLine", "", "vertLine", "vertLine", "", "vertLine", "rightUp" "horizLine", "leftUp"]],
+
+	# bad "v": [["rightDiag", "", "leftDiag", "rightDiag", "", "leftDiag", "" "", ""]],
+	# idek "w": [["rightDiag", "", "leftDiag", "vertLine", "horizLine", "leftDown", "vertLine" "horizLine", "leftUp"]],	
+	"x": [["rightDiag", "", "leftDiag", "", "", "", "leftDiag", "", "rightDiag"]],
+	"y": [["rightDiag", "", "leftDiag", "", "leftDiag", "", "leftUp" "", ""]],
+	"z": [["horizLine", "horizLine", "leftDiag", "", "leftDiag", "", "leftDiag" "horizLine", "horizLine"]],
+
 	"t": [["horizLine", "vertLine", "horizLine", "", "vertLine", "", "" "vertLine", ""]],
 	"1": [["vertLine", "", "", "vertLine", "", "", "vertLine" "", ""],
 	["", "vertLine", "", "", "vertLine", "", "vertLine" "", ""],
