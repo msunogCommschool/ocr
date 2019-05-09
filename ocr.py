@@ -28,6 +28,118 @@ def getImageFromPath(path):
 def nameWithStandard(name):
 	return "STAN" + name
 
+# *I should test the structures
+
+# Returns an array of pixels from an image
+# String -> List[List[Int]]
+def imageToArrayByCol(path):
+	img = Image.open(path)
+	img = img.convert("L")
+	imgArray = []
+
+	for i in range(0, img.size[0]):
+		col = []
+		for j in range(0, img.size[1]):
+			col.append(img.getpixel((i, j)))
+		imgArray.append(col)
+
+	return imgArray
+
+# testing func
+def displayColVals(path, x):
+	img = Image.open(path)
+	imgArray = imageToArrayByCol(path)
+	for i in range(0, img.size[1]):
+		print(str(imgArray[x][i]))
+	return
+
+
+# takes an image path and gets all the characters partitions
+# String ->
+def getImagePartitions(path):
+	sliceIndices = [0]
+	currentIndex = 0
+	while nextSpaceChar(path, currentIndex) != currentIndex:
+		currentIndex = nextSpaceChar(path, currentIndex)
+		sliceIndices.append(currentIndex)
+
+	for i in range(len(sliceIndices) - 1):
+		cutImage(path, sliceIndices[i], sliceIndices[i + 1], i)
+
+
+
+# Separating chars
+
+#* shouldn't nec. be 45
+# Finds x coord of the next space between characters in an image
+# String int -> int
+def nextSpaceChar(path, initX):
+
+	charEnded = False
+	charStarted = False
+	spaces = 0
+	x = initX
+
+	imgArray = imageToArrayByCol(path)
+	while x < len(imgArray):
+		if columnBlank(imgArray, x):
+			if charStarted:
+				if not(charEnded):
+					charEnded = True
+
+				else:
+					spaces = spaces + 1
+		else:
+			if charEnded:
+				return x - (spaces // 2)
+			else:
+				charStarted = True
+		x = x + 1
+	print(str(spaces))
+	return x - (spaces // 2)
+
+"""
+# Cuts an image at a given column and returns that array
+# String Int -> List[List[Int]]
+def cutImage(path, x):
+	imgArray = imageToArrayByCol(path)
+	newArray = imgArray[:x]
+"""
+
+def cutImage(path, xStart, xEnd, i):
+	img = Image.open(path)
+	img.crop((xStart, 0, xEnd, img.size[1])).save((path[:(len(path) - 4)] + str(i) + ".png"))
+	#return img.crop((xStart, 44, xEnd, 0))
+
+# Checks if an image is blank ata given column
+# List[List[Int]] Int -> Bool
+def columnBlank(array, x):
+	column = array[x]
+	for y in array[x]:
+		if y < 200:
+			return False
+	return True
+
+			
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Creates a collection of data for a part of an image
 # Uses a list of lists (rows, columns)
 # String Int Int -> List[List[Int]]
@@ -101,10 +213,9 @@ def evalBlock(array):
 	nonWhiteCount = STARTING_COUNT
 	for row in array:
 		for pixel in row:
-			if (pixel > 0):
+			if (pixel < 255):
 				nonWhiteCount = nonWhiteCount + ((25.0 - STARTING_COUNT) / 25.0)
 
-	# Adding .1 t return value
 	# To fix mistake of 0 trumping, obv not a permanent solution.
 	return (sqrt(.04 * nonWhiteCount))
 
@@ -149,7 +260,8 @@ def makeStructDict(array):
 		"leftUp": leftUpCurveVal(array),
 		"leftDown": leftDownCurveVal(array),
 		"rightUp": rightUpCurveVal(array),
-		"rightDown": rightDownCurveVal(array) 
+		"rightDown": rightDownCurveVal(array),
+		"blank": blankVal(array) 
 	}
 
 	return imgDict
@@ -224,62 +336,87 @@ def rightDownCurveVal(array):
 
 	return max(topLine, botLine)
 
+def blankVal(array):
+	evalList = getStructureSectionEvals(array)
+
+	block = ((1 - evalList[0]) * (1 - evalList[1]) * (1 - evalList[2]) * (1 - evalList[3])
+	 * (1 - evalList[4]) * (1 - evalList[5]) * (1 - evalList[6]) * (1 - evalList[7])
+	 * (1 - evalList[8]))**(1.0/10)
+
+	return block
+
 
 
 # Character Structure Dictionaries
-# pair characters to tuples
-# lists containging tuples contain structure type followed by number of non blank structures
-# (for nth rooting to balance)
+# pair characters to lists
+# lists containging lists of structure types
 
 charStructDict = {
-	"a": [["rightDown", "horizLine", "vertLine", "vertLine", "", "vertLine", "rightUp" "horizLine", "vertLine"]],
-	"b": [["vertLine", "", "", "vertLine", "horizLine", "leftDown", "vertLine" "horizLine", "leftUp"]],	
-	"c": [["rightDown", "horizLine", "", "vertLine", "", "", "rightUp" "horizLine", ""]],
-	"d": [["", "", "vertLine", "rightDown", "horizLine", "vertLine", "rightUp" "horizLine", "vertLine"]],
-	"e": [["rightDown", "horizLine", "leftDown", "horizLine", "horizLine", "horizLine", "rightDown" "horizLine", ""]],
+	"a": [["rightDown", "horizLine", "vertLine", "vertLine", "", "vertLine", "rightUp", "horizLine", "vertLine"]],
+	"b": [["vertLine", "", "", "vertLine", "horizLine", "leftDown", "vertLine", "horizLine", "leftUp"]],	
+	"c": [["rightDown", "horizLine", "", "vertLine", "", "", "rightUp", "horizLine", ""]],
+	"d": [["", "", "vertLine", "rightDown", "horizLine", "vertLine", "rightUp", "horizLine", "vertLine"]],
+	"e": [["rightDown", "horizLine", "leftDown", "horizLine", "horizLine", "horizLine", "rightDown", "horizLine", ""]],
 	
-	"f": [["", "rightDown", "horizLine", "horizLine", "vertLine", "horizLine", "" "vertLine", ""]],
-	"g": [["rightDown", "horizLine", "vertLine", "vertLine", "", "vertLine", "" "horizLine", "leftUp"]],	
-	"h": [["vertLine", "", "", "vertLine", "horizLine", "leftDown", "vertLine" "", "vertLine"]],
-	#* "i": [["", "", "vertLine", "rightDown", "horizLine", "vertLine", "rightUp" "horizLine", "vertLine"]],
-	"j": [["", "vertLine", "", "", "vertLine", "", "leftUp" "vertLine", ""]],
+	"f": [["", "rightDown", "horizLine", "horizLine", "vertLine", "horizLine", "", "vertLine", ""]],
+	"g": [["rightDown", "horizLine", "vertLine", "vertLine", "", "vertLine", "", "horizLine", "leftUp"]],	
+	"h": [["vertLine", "", "", "vertLine", "horizLine", "leftDown", "vertLine", "", "vertLine"]],
+	#* "i": [["", "", "vertLine", "rightDown", "horizLine", "vertLine", "rightUp", "horizLine", "vertLine"]],
+	"j": [["", "vertLine", "", "", "vertLine", "", "leftUp", "vertLine", ""]],
 
-	"k": [["vertLine", "", "", "vertLine", "leftDiag", "", "vertLine" "rightDiag", ""]],
-	#(*) "l": [["", "vertLine", "", "", "vertLine", "", "" "vertLine", ""]],	
-	"m": [["horizLine", "horizLine", "horizLine" "vertLine", "vertLine", "vertLine", "vertLine" "vertLine", "vertLine"]],
-	"n": [["rightDown", "horizLine", "leftDown", "vertLine", "", "vertLine", "vertLine" "", "vertLine"]],
+	"k": [["vertLine", "", "", "vertLine", "leftDiag", "", "vertLine", "rightDiag", ""]],
+	#(*) "l": [["", "vertLine", "", "", "vertLine", "", "", "vertLine", ""]],	
+	"m": [["horizLine", "horizLine", "horizLine", "vertLine", "vertLine", "vertLine", "vertLine", "vertLine", "vertLine"]],
+	"n": [["rightDown", "horizLine", "leftDown", "vertLine", "", "vertLine", "vertLine", "", "vertLine"]],
 	# it's 0, ... "o": [["rightDown", "horizLine", "leftDown", "vertLine", "", "vertLine", "rightUp", "horizLine", "leftUp"]],
 
-	"p": [["vertLine", "horizLine", "leftDown", "vertLine", "horizLine", "leftUp", "vertLine" "", ""]],
-	"q": [["rightDown", "horizLine", "vertLine", "rightUp", "horizLine", "vertLine", "" "", "vertLine"]],	
-	# bad "r": [["vertLine", "", "", "vertLine", "horizLine", "", "vertLine" "", ""]],
-	"s": [["vertLine", "horizLine", "", "rightUp", "rightDiag", "leftDown", "" "horizLine", "vertLine"]],
+	"p": [["vertLine", "horizLine", "leftDown", "vertLine", "horizLine", "leftUp", "vertLine", "", ""]],
+	"q": [["rightDown", "horizLine", "vertLine", "rightUp", "horizLine", "vertLine", "", "", "vertLine"]],	
+	# bad "r": [["vertLine", "", "", "vertLine", "horizLine", "", "vertLine", "", ""]],
+	"s": [["vertLine", "horizLine", "", "rightUp", "rightDiag", "leftDown", "", "horizLine", "vertLine"]],
 	
-	"u": [["vertLine", "", "vertLine", "vertLine", "", "vertLine", "rightUp" "horizLine", "leftUp"]],
+	"u": [["vertLine", "", "vertLine", "vertLine", "", "vertLine", "rightUp", "horizLine", "leftUp"]],
 
-	# bad "v": [["rightDiag", "", "leftDiag", "rightDiag", "", "leftDiag", "" "", ""]],
-	# idek "w": [["rightDiag", "", "leftDiag", "vertLine", "horizLine", "leftDown", "vertLine" "horizLine", "leftUp"]],	
+	# bad "v": [["rightDiag", "", "leftDiag", "rightDiag", "", "leftDiag", "", "", ""]],
+	# "w": [["rightDiag", "", "leftDiag", "vertLine", "horizLine", "leftDown", "vertLine", "horizLine", "leftUp"]],	
 	"x": [["rightDiag", "", "leftDiag", "", "", "", "leftDiag", "", "rightDiag"]],
-	"y": [["rightDiag", "", "leftDiag", "", "leftDiag", "", "leftUp" "", ""]],
-	"z": [["horizLine", "horizLine", "leftDiag", "", "leftDiag", "", "leftDiag" "horizLine", "horizLine"]],
+	"y": [["rightDiag", "", "leftDiag", "", "leftDiag", "", "leftUp", "", ""]],
+	"z": [["horizLine", "horizLine", "leftDiag", "", "leftDiag", "", "leftDiag", "horizLine", "horizLine"]],
 
-	"t": [["horizLine", "vertLine", "horizLine", "", "vertLine", "", "" "vertLine", ""]],
-	"1": [["vertLine", "", "", "vertLine", "", "", "vertLine" "", ""],
-	["", "vertLine", "", "", "vertLine", "", "vertLine" "", ""],
-	["", "", "vertLine", "", "", "vertLine", "" "", "vertLine"]],
+	"t": [["horizLine", "vertLine", "horizLine", "", "vertLine", "", "", "vertLine", ""],
+	["", "vertLine", "", "horizLine", "vertLine", "horizLine", "", "vertLine", ""]],
+	"1": [["vertLine", "", "", "vertLine", "", "", "vertLine", "", ""],
+	["", "vertLine", "", "", "vertLine", "", "vertLine", "", ""],
+	["", "", "vertLine", "", "", "vertLine", "", "", "vertLine"]],
 	"0": [["rightDown", "horizLine", "leftDown", "vertLine", "", "vertLine", "rightUp", "horizLine", "leftUp"]]
 }
+
+# Prints the top 5 most likely characters for a given image
+# String ->
+def topFiveChars(path):
+	topCharsAndValues = []
+	for char in charStructDict:
+		print(char + ": ")
+		print(str(charProbability(path, char)) + "\n")
+
+
+
+# Given an image path, returns the probability that it is a given char
+# String String -> Int
+def charProbability(path, char):
+	dicts = getImageStructureEvals(path)
+	return charProbabilityFromDicts(dicts, char)
 
 
 # Given a structure array, returns the probability that it is a given char
 # List[Dict[String -> int]] String -> Int
-def charProbability(dict, char):
+def charProbabilityFromDicts(dict, char):
 	checkDicts = charStructDict[char]
 
 	max = 0
 	for checkDict in checkDicts:
 		if dictAffinity(dict, checkDict) > max:
-			max = dictAffinity(dict, checkDict)
+			max = dictAffinityWithWhite(dict, checkDict)
 	return max
 
 # Returns how strong two dicts match
@@ -287,12 +424,25 @@ def charProbability(dict, char):
 def dictAffinity(dict, matches):
 	affinity = 1
 	mult = 0
-	for i in range(8):
+	for i in range(9):
 		if matches[i] != "":
 			mult = mult + 1
 			affinity = affinity * dict[i][matches[i]]
 
-	return affinity ** (1/float(mult))
+	return affinity ** (1.0/float(mult))
+
+
+# Returns how strong two dicts match using white space
+# List[Dict[String -> int]] List[String] Int -> Int
+def dictAffinityWithWhite(dict, matches):
+	affinity = 1
+	for i in range(8):
+		if matches[i] == "":
+			affinity = affinity * dict[i]["blank"]
+		else:
+			affinity = affinity * dict[i][matches[i]]
+
+	return affinity ** (1.0/9)
 
 
 
