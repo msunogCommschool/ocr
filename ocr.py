@@ -156,9 +156,18 @@ def getStructureSectionEvals(array):
 
 	return evalList
 
+
+
+
+
+
+
+
 # The following functions should all be
 # List[List[Int]] -> Int (between 0 and 1)
 # Make these return nth rooth
+
+# These could take into account the blanks. 
 
 def horizLineVal(array):
 	evalList = getStructureSectionEvals(array)
@@ -241,6 +250,9 @@ def blankVal(array):
 
 
 
+
+
+
 # Evaluate an image (1st layer) by structures
 
 # Returns a list of the structure evaluation dictionaries
@@ -272,6 +284,71 @@ def makeStructDict(array):
 	}
 
 	return imgDict
+
+"""
+
+
+
+
+
+
+
+
+# The following functions should all be
+# List[List[Int]] -> Int (between 0 and 1)
+# Make these return nth rooth
+
+# These could take into account the blanks. 
+
+def structureVal(array, blockList):
+	maxVal = 0
+	evalList = getStructureSectionEvals(array)
+
+	for blocks in blockList:
+		val = 1
+		listIndex = 0
+		for block in range(9):
+			if len(blocks) > listIndex:
+				if block == blocks[listIndex]:
+					val = val * evalList[block]
+					listIndex = listIndex + 1
+				else:
+					val = val * (1 - evalList[block])
+			else:
+				val = val * (1 - evalList[block])
+		if val > maxVal:
+			maxVal = val
+	return maxVal
+
+def makeStructDict(array):
+	imgDict = {
+		"horizLine": structureVal(array, [[0, 1, 2], [3, 4, 5], [6, 7, 8]]),
+		"vertLine": structureVal(array, [[0, 3, 6], [1, 4, 7], [2, 5, 8]]),
+		"leftDiag": structureVal(array, [[2, 4, 6]]),
+		"rightDiag": structureVal(array, [[0, 4, 8]]),
+		"leftUp": structureVal(array, [[1, 3, 4], [5, 7, 8]]),
+		"leftDown": structureVal(array, [[3, 4, 7], [1, 2, 5]]),
+		"rightUp": structureVal(array, [[1, 4, 5], [3, 6, 7]]),
+		"rightDown": structureVal(array, [[0, 1, 3], [4, 5, 7]]),
+		"blank": blankVal(array) 
+	}
+
+	return imgDict
+
+
+"""
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -351,24 +428,29 @@ charStructDict = {
 	"f": [["", "rightDown", "horizLine", "horizLine", "vertLine", "horizLine", "", "vertLine", ""]],
 	"g": [["rightDown", "horizLine", "vertLine", "vertLine", "", "vertLine", "", "horizLine", "leftUp"]],	
 	"h": [["vertLine", "", "", "vertLine", "horizLine", "leftDown", "vertLine", "", "vertLine"]],
-	#* "i": [["", "", "vertLine", "rightDown", "horizLine", "vertLine", "rightUp", "horizLine", "vertLine"]],
+	"i": [["", "", "", "vertLine", "", "", "vertLine", "", ""],
+	["", "", "", "", "vertLine", "", "", "vertLine", ""],
+	["", "", "", "", "", "vertLine", "", "", "vertLine"]],
 	"j": [["", "vertLine", "", "", "vertLine", "", "leftUp", "vertLine", ""]],
 
 	"k": [["vertLine", "", "", "vertLine", "leftDiag", "", "vertLine", "rightDiag", ""]],
-	#(*) "l": [["", "vertLine", "", "", "vertLine", "", "", "vertLine", ""]],	
+	"l": [["vertLine", "", "", "vertLine", "", "", "vertLine", "", ""],
+	["", "vertLine", "", "", "vertLine", "", "", "vertLine", ""],
+	["", "", "vertLine", "", "", "vertLine", "", "", "vertLine"]],	
 	"m": [["horizLine", "horizLine", "horizLine", "vertLine", "vertLine", "vertLine", "vertLine", "vertLine", "vertLine"]],
 	"n": [["rightDown", "horizLine", "leftDown", "vertLine", "", "vertLine", "vertLine", "", "vertLine"]],
-	# it's 0, ... "o": [["rightDown", "horizLine", "leftDown", "vertLine", "", "vertLine", "rightUp", "horizLine", "leftUp"]],
+	"o": [["rightDown", "horizLine", "leftDown", "vertLine", "", "vertLine", "rightUp", "horizLine", "leftUp"]],
 
 	"p": [["vertLine", "horizLine", "leftDown", "vertLine", "horizLine", "leftUp", "vertLine", "", ""]],
 	"q": [["rightDown", "horizLine", "vertLine", "rightUp", "horizLine", "vertLine", "", "", "vertLine"]],	
-	# bad "r": [["vertLine", "", "", "vertLine", "horizLine", "", "vertLine", "", ""]],
+	"r": [["vertLine", "", "", "vertLine", "rightDown", "", "vertLine", "horizLine", ""],
+	["", "vertLine", "", "", "vertLine", "rightDown", "", "vertLine", "horizLine"]],
 	"s": [["vertLine", "horizLine", "", "rightUp", "rightDiag", "leftDown", "", "horizLine", "vertLine"]],
 	
 	"u": [["vertLine", "", "vertLine", "vertLine", "", "vertLine", "rightUp", "horizLine", "leftUp"]],
 
-	# bad "v": [["rightDiag", "", "leftDiag", "rightDiag", "", "leftDiag", "", "", ""]],
-	# "w": [["rightDiag", "", "leftDiag", "vertLine", "horizLine", "leftDown", "vertLine", "horizLine", "leftUp"]],	
+	"v": [["rightDiag", "", "leftDiag", "rightDiag", "", "leftDiag", "", "", ""]],
+	"w": [["vertLine", "vertLine", "vertLine", "vertLine", "vertLine", "vertLine", "horizLine", "horizLine", "horizLine"]],	
 	"x": [["rightDiag", "", "leftDiag", "", "", "", "leftDiag", "", "rightDiag"]],
 	"y": [["rightDiag", "", "leftDiag", "", "leftDiag", "", "leftUp", "", ""]],
 	"z": [["horizLine", "horizLine", "leftDiag", "", "leftDiag", "", "leftDiag", "horizLine", "horizLine"]],
