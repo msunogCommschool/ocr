@@ -7,15 +7,6 @@ from math import sqrt
 # Gathering and standardizing data
 #
 
-STANDARD_WIDTH = 45
-STANDARD_HEIGHT = 45
-# Changes the size of a given image to the standard
-# Image String -> Image
-def resizeToStandard(path):
-	img = getImageFromPath(path)
-	img = img.resize((STANDARD_WIDTH, STANDARD_HEIGHT))
-	img.save(nameWithStandard(path)) 
-
 # Returns the image at a given path, or an error if there is none
 # String -> Image
 def getImageFromPath(path):
@@ -27,14 +18,32 @@ def getImageFromPath(path):
 	except IOError: 
 		pass
 
-# Adds Standard to the beginning of a string
+STANDARD_WIDTH = 45
+STANDARD_HEIGHT = 45
+# Changes the size of a given image to the standard
+# Image String -> Image
+def resizeToStandard(path):
+	img = getImageFromPath(path)
+	img = img.resize((STANDARD_WIDTH, STANDARD_HEIGHT))
+	img.save(nameWithStandard(path)) 
+
+# Make an image black and white
+# String ->
+def makeBW(path):
+	image = Image.open(path)
+	image = image.convert('1') # convert image to black and white
+	image.save(nameWithBW(path))
+
+
+# Adds STAN to the beginning of a string
 # String -> String
 def nameWithStandard(name):
 	return "STAN" + name
 
-# *I should test the structures
-
-
+# Adds BW to the beginning of a string
+# String -> String
+def nameWithBW(name):
+	return "BW" + name
 
 
 # Returns an array of pixels from an image
@@ -52,7 +61,24 @@ def imageToArrayByCol(path):
 
 	return imgArray
 
-# testing func for above
+
+# Converts an array by columns to an array by rows
+# List[List[Int]] -> List[List[Int]]
+def arrayByColToRow(array):
+	imgArray = []
+
+	for i in range(len(array[0])):
+		row = []
+		for j in range(len(array)):
+			row.append(array[j][i])
+		imgArray.append(row)
+
+	return imgArray
+
+
+# Testing func for above
+# Displays values for a column of pixels from an image
+# String Int ->
 def displayColVals(path, x):
 	img = Image.open(path)
 	imgArray = imageToArrayByCol(path)
@@ -126,7 +152,8 @@ def pixelAtPos(array, x, y):
 STARTING_COUNT = .2
 
 # Returns a value based on how percentage of non-white pixels in 5x5 block
-# Returns a value between 0 and 1
+# Returns a value between 0 and .987
+# (Cannot return 0 or 1 due to errors when taking roots of these values)
 # List[List[Int]] -> Int
 def evalBlock(array):
 	nonWhiteCount = STARTING_COUNT
@@ -134,9 +161,7 @@ def evalBlock(array):
 		for pixel in col:
 			if (pixel > 0):
 				nonWhiteCount = nonWhiteCount + ((25.0 - STARTING_COUNT) / 25.0)
-
-	# To fix mistake of 0 trumping, obv not a permanent solution.
-	return ((.04 * nonWhiteCount)**(1/2.0))
+	return ((.039 * nonWhiteCount)**(1/2.0))
 
 
 
@@ -285,13 +310,11 @@ def makeStructDict(array):
 
 	return imgDict
 
+
+# These functions take into account white space for structure evaluations
+
+
 """
-
-
-
-
-
-
 
 
 # The following functions should all be
@@ -348,19 +371,28 @@ def makeStructDict(array):
 
 
 
-
-
-
-
-
-
 # Evaluate an image (1st layer) and return result
-
-
 
 # Prints the top 5 most likely characters for a given image
 # String ->
 def topFiveChars(path):
+	topCharsAndVals = []
+	for char in charStructDict:
+		if len(topCharsAndVals) < 5:
+			topCharsAndVals.append((char, charProbability(path, char)))
+		else:
+			topCharsAndVals.sort(key=lambda tup: tup[1])
+			if charProbability(path, char) > topCharsAndVals[0][1]:
+				topCharsAndVals[0] = (char, charProbability(path, char))
+	topCharsAndVals.sort(key=lambda tup: tup[1])
+	for tup in topCharsAndVals:
+		print(tup[0])
+
+
+
+# Prints all char probabilities
+# String ->
+def allCharProbabilities(path):
 	topCharsAndValues = []
 	for char in charStructDict:
 		print(char + ": ")
@@ -456,11 +488,11 @@ charStructDict = {
 	"z": [["horizLine", "horizLine", "leftDiag", "", "leftDiag", "", "leftDiag", "horizLine", "horizLine"]],
 
 	"t": [["horizLine", "vertLine", "horizLine", "", "vertLine", "", "", "vertLine", ""],
-	["", "vertLine", "", "horizLine", "vertLine", "horizLine", "", "vertLine", ""]],
-	"1": [["vertLine", "", "", "vertLine", "", "", "vertLine", "", ""],
-	["", "vertLine", "", "", "vertLine", "", "", "vertLine", ""],
-	["", "", "vertLine", "", "", "vertLine", "", "", "vertLine"]],
-	"0": [["rightDown", "horizLine", "leftDown", "vertLine", "", "vertLine", "rightUp", "horizLine", "leftUp"]]
+	["", "vertLine", "", "horizLine", "vertLine", "horizLine", "", "vertLine", ""]]
+	#"1": [["vertLine", "", "", "vertLine", "", "", "vertLine", "", ""],
+	#["", "vertLine", "", "", "vertLine", "", "", "vertLine", ""],
+	#["", "", "vertLine", "", "", "vertLine", "", "", "vertLine"]],
+	#"0": [["rightDown", "horizLine", "leftDown", "vertLine", "", "vertLine", "rightUp", "horizLine", "leftUp"]]
 }
 
 
@@ -516,20 +548,51 @@ def nextSpaceChar(path, initX):
 	return x - (spaces // 2)
 
 
-
+# Creates a new image cut horizontally from original image with given ends
+# Name epiphix fron last int given
+# String Int Int Int ->
 def cutImage(path, xStart, xEnd, i):
 	img = Image.open(path)
 	img.crop((xStart, 0, xEnd, img.size[1])).save((path[:(len(path) - 4)] + str(i) + ".png"))
 	#return img.crop((xStart, 44, xEnd, 0))
 
-# Checks if an image is blank ata given column
+# Checks if an image is blank at a given column
 # List[List[Int]] Int -> Bool
 def columnBlank(array, x):
 	column = array[x]
 	for y in array[x]:
-		if y < 200:
+		if y < 240:
 			return False
 	return True
+
+
+# Cuts of white space at top and bottom of image
+# String -> 
+def vertCropImage(path):
+	img = Image.open(path)
+	rowArray = arrayByColToRow(imageToArrayByCol(path))
+
+	yStart = 0
+	yEnd = len(rowArray)
+
+
+	if columnBlank(rowArray, 0):
+		print("here")
+		for i in range(len(rowArray)):
+			if columnBlank(rowArray, i) == False:
+				if yStart == 0:
+					yStart = i
+			else:
+				yEnd = i
+		print(str(yStart) + str(yEnd))
+	yStart = max(0, yStart - 2)
+	yEnd = min(len(rowArray), yEnd + 2)
+
+	img.crop((0, yStart, img.size[0], yEnd)).save(("CROP" + path))
+
+
+
+
 
 
 
