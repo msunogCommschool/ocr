@@ -152,7 +152,7 @@ def pixelAtPos(array, x, y):
 STARTING_COUNT = .2
 
 # Returns a value based on how percentage of non-white pixels in 5x5 block
-# Returns a value between 0 and .987
+# Returns a value between .0883 and .987
 # (Cannot return 0 or 1 due to errors when taking roots of these values)
 # List[List[Int]] -> Int
 def evalBlock(array):
@@ -185,14 +185,30 @@ def getStructureSectionEvals(array):
 
 
 
-
-
-
-# The following functions should all be
+# Returns the probability value that a section is a blank structure
 # List[List[Int]] -> Int (between 0 and 1)
-# Make these return nth rooth
+BLANK_SCALE = (1.0/3)
+def blankVal(array):
+	evalList = getStructureSectionEvals(array)
 
-# These could take into account the blanks. 
+	block = ((1 - evalList[0]**BLANK_SCALE) * (1 - evalList[1]**BLANK_SCALE) * (1 - evalList[2]**BLANK_SCALE)
+	 * (1 - evalList[3]**BLANK_SCALE) * (1 - evalList[4]**BLANK_SCALE) * (1 - evalList[5]**BLANK_SCALE)
+	 * (1 - evalList[6]**BLANK_SCALE) * (1 - evalList[7]**BLANK_SCALE) * (1 - evalList[8]**BLANK_SCALE))**(1.0/10)
+
+	return block
+
+
+# Two options for the following functions, comment/uncomment the ["""] to activate
+# Option 1: unabstracted, does not account for blank space in a section
+# Option 2: abstracted, allows for either accounting for blank space in a section or not
+# However, option 2 without blank space uses a slightly altered algorithm that produces worse results
+
+
+# Option 1
+#"""
+
+# The following functions are all
+# List[List[Int]] -> Int (between 0 and 1)
 
 def horizLineVal(array):
 	evalList = getStructureSectionEvals(array)
@@ -260,41 +276,10 @@ def rightDownCurveVal(array):
 	return max(topLine, botLine)
 
 
-# bias toward blank because all structures contain some blankness.
-# Fix with this <1 exponent multipler
-BLANK_SCALE = (1.0/3)
-def blankVal(array):
-	evalList = getStructureSectionEvals(array)
-
-	block = ((1 - evalList[0]**BLANK_SCALE) * (1 - evalList[1]**BLANK_SCALE) * (1 - evalList[2]**BLANK_SCALE)
-	 * (1 - evalList[3]**BLANK_SCALE) * (1 - evalList[4]**BLANK_SCALE) * (1 - evalList[5]**BLANK_SCALE)
-	 * (1 - evalList[6]**BLANK_SCALE) * (1 - evalList[7]**BLANK_SCALE) * (1 - evalList[8]**BLANK_SCALE))**(1.0/10)
-
-	return block
-
-
-
-
-
-
-
-# Evaluate an image (1st layer) by structures
-
-# Returns a list of the structure evaluation dictionaries
-# String -> List[Dict[String -> int]]
-def getImageStructureEvals(path):
-	evalList = []
-	for i in range(0, 3):
-		for j in range(0, 3):
-			structure = makeImageSection(path, j, i)
-			evalList.append(makeStructDict(structure))
-
-	return evalList
-
 
 # Creates a dictionary with values for each type of structure for a given image array
 # maybe switch to class
-# array -> dict
+# List[List[Int]] -> dict
 def makeStructDict(array):
 	imgDict = {
 		"horizLine": horizLineVal(array),
@@ -310,19 +295,35 @@ def makeStructDict(array):
 
 	return imgDict
 
+#"""
 
-# These functions take into account white space for structure evaluations
+# Option 2
 
-
+# If using the abstracted functions, comment out one of the two structureVal functions
 """
 
+# Returns the structure probability value for an array, does not account for white space
+# List[List[Int]] List[Int] -> Int
+def structureVal(array, blockList):
+	maxVal = 0
+	evalList = getStructureSectionEvals(array)
 
-# The following functions should all be
-# List[List[Int]] -> Int (between 0 and 1)
-# Make these return nth rooth
+	for blocks in blockList:
+		val = 1
+		listIndex = 0
+		for block in range(9):
+			if len(blocks) > listIndex:
+				if block == blocks[listIndex]:
+					val = val * evalList[block]
+					listIndex = listIndex + 1
 
-# These could take into account the blanks. 
+		if val > maxVal:
+			maxVal = val
+	return maxVal**(1.00 / len(blocks))
 
+
+# Returns the structure probability value for an array accounting for white space
+# List[List[Int]] List[Int] -> Int
 def structureVal(array, blockList):
 	maxVal = 0
 	evalList = getStructureSectionEvals(array)
@@ -343,6 +344,12 @@ def structureVal(array, blockList):
 			maxVal = val
 	return maxVal
 
+
+
+
+# Creates a dictionary with values for each type of structure for a given image array, no white space
+# maybe switch to class
+# List[List[Int]] -> dict
 def makeStructDict(array):
 	imgDict = {
 		"horizLine": structureVal(array, [[0, 1, 2], [3, 4, 5], [6, 7, 8]]),
@@ -358,13 +365,21 @@ def makeStructDict(array):
 
 	return imgDict
 
-
 """
 
 
+# Evaluate an image (1st layer) by structures
 
+# Returns a list of the structure evaluation dictionaries
+# String -> List[Dict[String -> int]]
+def getImageStructureEvals(path):
+	evalList = []
+	for i in range(0, 3):
+		for j in range(0, 3):
+			structure = makeImageSection(path, j, i)
+			evalList.append(makeStructDict(structure))
 
-
+	return evalList
 
 
 
@@ -494,9 +509,6 @@ charStructDict = {
 	#["", "", "vertLine", "", "", "vertLine", "", "", "vertLine"]],
 	#"0": [["rightDown", "horizLine", "leftDown", "vertLine", "", "vertLine", "rightUp", "horizLine", "leftUp"]]
 }
-
-
-
 
 
 

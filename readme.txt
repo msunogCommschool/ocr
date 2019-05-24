@@ -23,3 +23,7 @@ Notes:
 	
 	Only works for aphebetical characters
 	Currently doesn't support capital letters
+
+For the makeStructDict functions, comment one of the options out.
+Use instructions in the code.
+By default, the abstracted functions are commented out.
